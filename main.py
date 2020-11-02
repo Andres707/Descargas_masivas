@@ -1,21 +1,17 @@
-import requests
-from bs4 import BeautifulSoup
 import tkinter as tk
 from tkinter import *  # Carga módulo tk (widgets estándar)
 from tkinter import ttk, messagebox  # Carga ttk (para widgets nuevos 8.5+)
-# import tkFont
 import logging
 import threading
+import WebScraping as wbs
+from time import sleep
 
 logging.basicConfig(level=logging.DEBUG, format='[%(levelname)s] (%(threadName)-s) %(message)s')
 
 
 class ventana:
     def __init__(self):
-        # Hilo Ventana
-        hiloVentana = threading.Thread(name='Hiloventana', target=self.ventana)
-        hiloVentana.start()
-        hiloVentana.join()
+        self.ventana()
 
     def ventana(self):
         # <UI>
@@ -51,7 +47,7 @@ class ventana:
         txtRangoMax = ttk.Entry(_home, justify=tk.LEFT, textvariable=self.varMax)
         txtRuta = ttk.Entry(_home, justify=tk.LEFT, textvariable=self.varRuta)
         # btn
-        btnInicio = ttk.Button(_home, text='Iniciar', command=self.roow)
+        btnInicio = ttk.Button(_home, text='Iniciar', command=self.demonios)
         # position
         lblSaludo.place(x=150, y=0)
         lblPagina.place(x=0, y=40)
@@ -77,8 +73,8 @@ class ventana:
         self._tree.column("three", width=20, minwidth=50)
         self._tree.heading("#0", text="#", anchor=tk.W)
         self._tree.heading("one", text="Capitulo", anchor=tk.W)
-        self._tree.heading("two", text="Estado", anchor=tk.W)
-        self._tree.heading("three", text="URL de descarga", anchor=tk.W)
+        self._tree.heading("two", text="URL de descarga", anchor=tk.W)
+        self._tree.heading("three", text="Estado", anchor=tk.W)
         self._tree.pack(side=tk.TOP, fill=tk.X)
         _ventana.mainloop()
 
@@ -89,11 +85,30 @@ class ventana:
         f = self._tree.insert("", 1, values=row)
         return f
 
+    def demonios(self):
+        hiloclase = threading.Thread(target=self.roow)
+        hiloclase.isDaemon()
+        hiloclase.start()
+
     def roow(self):
-        row = ["Temporada 1", 12, 120]
-        f = self.addFolder(row)
-        row = [1, 12, 120, 46]
-        self.addRow(row, f)
+        webs = wbs.web_scr()
+        webs.ran(url=self.varUrl.get(), max=int(self.varMax.get()), min=int(self.varMin.get()))
+        while True:
+            if wbs.web_scr.getdatos(self=webs) == 'Cargando...':
+                logging.info('Cargando...')
+            else:
+                t = wbs.web_scr.getdatos(self=webs,)
+                # print(t[0][0])
+                # print(t[0][1][0])
+                # print(t[0][1][0][0])
+                for i in range(len(t)):
+                    folder = self.addFolder([t[i][0]])
+                    for j in range(1, len(t[i][1])-1, 1):
+                        for u in range(3):
+                            # print(t[i][j][u][0])
+                            self.addRow([t[i][j][u][0], t[i][j][u][1], t[i][j][u][2]], folder)
+                break
+            sleep(15)
 
 
 if __name__ == '__main__':
